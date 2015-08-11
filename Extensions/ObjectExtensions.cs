@@ -39,19 +39,18 @@ namespace PA.Converters.Extensions
             else
             {
                 T o = default(T);
-#if ! XAMARIN
-                if (typeof(IConvertible).IsAssignableFrom(t))
+
+
+                try
                 {
-                    try
-                    {
-                        o = (T)Convert.ChangeType(value, t, CultureInfo.InvariantCulture);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.WriteLine(e.Message + "\n" + e.StackTrace);
-                    }
+                    o = (T)Convert.ChangeType(value, t, CultureInfo.InvariantCulture);
                 }
-#endif
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e.Message + "\n" + e.StackTrace);
+                }
+               
+
 
                 if (o == null)
                 {
@@ -59,9 +58,9 @@ namespace PA.Converters.Extensions
                     ConstructorInfo ci = t.GetConstructor(new Type[] { typeof(U) });
 #else
                     ConstructorInfo ci = t.GetTypeInfo().DeclaredConstructors.Where(
-                        c => c.GetParameters().Count() == 1 &&
-                        c.GetParameters().First().ParameterType == typeof(U)
-                    ).FirstOrDefault();
+                                             c => c.GetParameters().Count() == 1 &&
+                                             c.GetParameters().First().ParameterType == typeof(U)
+                                         ).FirstOrDefault();
 
 #endif
                     if (ci is ConstructorInfo)
@@ -83,9 +82,9 @@ namespace PA.Converters.Extensions
                     MethodInfo mi = t.GetMethod("Parse", new Type[] { typeof(string) });
 #else
                     MethodInfo mi = t.GetTypeInfo().GetDeclaredMethods("Parse").Where(
-                        m => m.GetParameters().Count() == 1 &&
-                        m.GetParameters().First().ParameterType == typeof(string)
-                    ).FirstOrDefault();
+                                        m => m.GetParameters().Count() == 1 &&
+                                        m.GetParameters().First().ParameterType == typeof(string)
+                                    ).FirstOrDefault();
 #endif
 
                     if (mi is MethodInfo && mi.IsStatic)
@@ -101,9 +100,9 @@ namespace PA.Converters.Extensions
                     MethodInfo mi = t.GetMethod("CreateFrom", new Type[] { typeof(string) });
 #else
                     MethodInfo mi = t.GetTypeInfo().GetDeclaredMethods("CreateFrom").Where(
-                        m => m.GetParameters().Count() == 1 &&
-                        m.GetParameters().First().ParameterType == typeof(string)
-                    ).FirstOrDefault();
+                                        m => m.GetParameters().Count() == 1 &&
+                                        m.GetParameters().First().ParameterType == typeof(string)
+                                    ).FirstOrDefault();
 #endif
                     if (mi is MemberInfo && mi.IsStatic)
                     {
@@ -127,13 +126,13 @@ namespace PA.Converters.Extensions
         {
 
             Array source = value.Where(
-                s => s != null &&
+                               s => s != null &&
 #if ! XAMARIN
                 type.IsAssignableFrom(s.GetType())
 #else
- type.GetTypeInfo().IsAssignableFrom(s.GetType().GetTypeInfo())
+                               type.GetTypeInfo().IsAssignableFrom(s.GetType().GetTypeInfo())
 #endif
-).ToArray();
+                           ).ToArray();
 
             Array destination = Array.CreateInstance(type, source.Length);
             Array.Copy(source, destination, source.Length);

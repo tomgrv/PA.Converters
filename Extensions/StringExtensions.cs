@@ -25,7 +25,7 @@ namespace PA.Converters.Extensions
 
                 if (type.HasElementType)
                 {
-                    return value.AsArray().Cast<string>().Select(a => a.AsArray(type, (t, s) => getInstance(t, s))).ToArray(type);
+                    return value.AsArray().Cast<string>().Select(a => a.AsArray(type, getInstance)).ToArray(type);
                 }
                 else
                 {

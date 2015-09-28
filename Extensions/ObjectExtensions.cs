@@ -13,33 +13,22 @@ namespace PA.Converters.Extensions
 {
     public static class ObjectExtensions
     {
-       
-
-
         public static T ParseTo<T, U>(this U value, Type type = null)
         {
             Type t = type ?? typeof(T);
 
-#if ! XAMARIN
-             if (!typeof(T).IsAssignableFrom(t))     
-#else
             if (!typeof(T).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
-#endif
             {
                 throw new InvalidCastException("Cannot cast <" + type.FullName + "> to <T>");
             }
-#if ! XAMARIN
-            if (t.IsEnum)
-#else
+
             if (t.GetTypeInfo().IsEnum)
-#endif
             {
                 return (T)Enum.Parse(t, value.ToString(), true);
             }
             else
             {
                 T o = default(T);
-
 
                 try
                 {
@@ -52,18 +41,14 @@ namespace PA.Converters.Extensions
                
 
 
-                if (o == null)
+                if ((T) o == null)
                 {
-#if ! XAMARIN
-                    ConstructorInfo ci = t.GetConstructor(new Type[] { typeof(U) });
-#else
-                    ConstructorInfo ci = t.GetTypeInfo().DeclaredConstructors.Where(
+                    ConstructorInfo ci = t.GetTypeInfo().DeclaredConstructors.FirstOrDefault(
                                              c => c.GetParameters().Count() == 1 &&
                                              c.GetParameters().First().ParameterType == typeof(U)
-                                         ).FirstOrDefault();
+                                         );
 
-#endif
-                    if (ci is ConstructorInfo)
+                    if (ci != null)
                     {
                         try
                         {
@@ -76,37 +61,43 @@ namespace PA.Converters.Extensions
                     }
                 }
 
-                if (o == null)
+                if ((T) o == null)
                 {
-#if ! XAMARIN
-                    MethodInfo mi = t.GetMethod("Parse", new Type[] { typeof(string) });
-#else
-                    MethodInfo mi = t.GetTypeInfo().GetDeclaredMethods("Parse").Where(
+                    MethodInfo mi = t.GetTypeInfo().GetDeclaredMethods("Parse").FirstOrDefault(
                                         m => m.GetParameters().Count() == 1 &&
                                         m.GetParameters().First().ParameterType == typeof(string)
-                                    ).FirstOrDefault();
-#endif
+                                    );
 
-                    if (mi is MethodInfo && mi.IsStatic)
+                    if (mi != null && mi.IsStatic)
                     {
-                        o = (T)mi.Invoke(null, new object[] { value });
+                        try
+                        {
+                            o = (T)mi.Invoke(null, new object[] { value });
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.WriteLine(e.Message + "\n" + e.StackTrace);
+                        }
                     }
                 }
 
-                if (o == null)
+                if ((T) o == null)
                 {
-
-#if ! XAMARIN
-                    MethodInfo mi = t.GetMethod("CreateFrom", new Type[] { typeof(string) });
-#else
-                    MethodInfo mi = t.GetTypeInfo().GetDeclaredMethods("CreateFrom").Where(
+                    MethodInfo mi = t.GetTypeInfo().GetDeclaredMethods("CreateFrom").FirstOrDefault(
                                         m => m.GetParameters().Count() == 1 &&
                                         m.GetParameters().First().ParameterType == typeof(string)
-                                    ).FirstOrDefault();
-#endif
-                    if (mi is MemberInfo && mi.IsStatic)
+                                    );
+
+                    if (mi != null && mi.IsStatic)
                     {
-                        o = (T)mi.Invoke(null, new object[] { value });
+                        try
+                        {
+                            o = (T)mi.Invoke(null, new object[] { value });
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.WriteLine(e.Message + "\n" + e.StackTrace);
+                        }
                     }
                 }
 
@@ -126,12 +117,7 @@ namespace PA.Converters.Extensions
         {
 
             Array source = value.Where(
-                               s => s != null &&
-#if ! XAMARIN
-                type.IsAssignableFrom(s.GetType())
-#else
-                               type.GetTypeInfo().IsAssignableFrom(s.GetType().GetTypeInfo())
-#endif
+                               s => s != null && type.GetTypeInfo().IsAssignableFrom(s.GetType().GetTypeInfo())
                            ).ToArray();
 
             Array destination = Array.CreateInstance(type, source.Length);

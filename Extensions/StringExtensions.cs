@@ -12,12 +12,24 @@ namespace PA.Converters.Extensions
 {
     public static class StringExtensions
     {
+        /// <summary>
+        /// Convert string to string array using first character as separator
+        /// </summary>
+        /// <returns>The array.</returns>
+        /// <param name="value">Value.</param>
         public static string[] AsArray(this string value)
         {
             return value.Split(new char[] { value[0] }, StringSplitOptions.RemoveEmptyEntries);
         }
 
-        public static Array AsArray<T>(this string value, Type TargetType, Func<Type, string, T> getInstance)
+        /// <summary>
+        /// Convert string to TargetType array using first character as separator
+        /// </summary>
+        /// <returns>The array.</returns>
+        /// <param name="value">string value.</param>
+        /// <param name="TargetType">Target type.</param>
+        /// <param name="getInstance">Get instance.</param>
+        public static Array AsArray(this string value, Type TargetType, Func<Type, string, object> getInstance)
         {
             if (TargetType.HasElementType)
             {
@@ -25,17 +37,22 @@ namespace PA.Converters.Extensions
 
                 if (type.HasElementType)
                 {
-                    return value.AsArray().Cast<string>().Select(a => a.AsArray(type, getInstance)).ToArray(type);
+                    return value.AsArray().AsEnumerable().Select(a => a.AsArray(type, getInstance)).ToArray(type);
                 }
                 else
                 {
-                    return value.AsArray().Cast<string>().Select(s => getInstance(type, s)).ToArray(type);
+                    return value.AsArray().AsEnumerable().Select(s => getInstance(type, s)).ToArray(type);
                 }
             }
 
             throw new InvalidCastException("Not an array");
         }
 
+        /// <summary>
+        /// Convert string to pascal case
+        /// </summary>
+        /// <returns>The pascal cased string</returns>
+        /// <param name="str">String.</param>
         public static string ToPascalCase(this string str)
         {
             // If there are 0 or 1 characters, just return the string.
@@ -56,6 +73,11 @@ namespace PA.Converters.Extensions
             return result;
         }
 
+        /// <summary>
+        /// Convert string to camel case
+        /// </summary>
+        /// <returns>The camel case.</returns>
+        /// <param name="str">String.</param>
         public static string ToCamelCase(this string str)
         {
             // If there are 0 or 1 characters, just return the string.
